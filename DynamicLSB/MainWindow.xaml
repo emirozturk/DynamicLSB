@@ -1,0 +1,65 @@
+﻿<Window x:Class="DynamicLSB.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:DynamicLSB"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="568.734" Width="771.464">
+    <Grid RenderTransformOrigin="0.499,0.375">
+        <Button x:Name="btnLoadSource" Content="Kaynak Dosya Aç" HorizontalAlignment="Left" Margin="10,275,0,0" VerticalAlignment="Top" Width="250" Height="28"/>
+        <Viewbox HorizontalAlignment="Left" Height="250" Margin="10,20,0,0" VerticalAlignment="Top" Width="250">
+            <Border BorderThickness="1" BorderBrush="Black">
+                <Image x:Name="imgSource"  Width="250" Height="250 "/>
+            </Border>
+        </Viewbox>
+        <Viewbox HorizontalAlignment="Left" Height="250" Margin="500,20,0,0" VerticalAlignment="Top" Width="250">
+            <Border BorderThickness="1" BorderBrush="Black">
+                <Image x:Name="imgModified"  Width="250" Height="250 "/>
+            </Border>
+        </Viewbox>
+        <Button x:Name="btnLoadModified" Content="Stego Dosya Kaydet" HorizontalAlignment="Left" Margin="500,275,0,0" VerticalAlignment="Top" Width="250" Height="28"/>
+        <Button x:Name="btnLoadSource_Copy" Content="Gizle" HorizontalAlignment="Left" Margin="308,192,0,0" VerticalAlignment="Top" Width="141" Height="28"/>
+        <TabControl HorizontalAlignment="Left" Height="220" Margin="10,308,0,0" VerticalAlignment="Top" Width="740">
+            <TabItem Header="Kaynak Bilgileri">
+                <Grid Background="#FFE5E5E5">
+                    <Label Content="Dosya Boyutu:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
+                    <Label Content="Maksimum Saklanabilecek Karakter Sayısı:" HorizontalAlignment="Left" Margin="10,41,0,0" VerticalAlignment="Top"/>
+                    <Label Content="Mevcut Karakter Sayısı:" HorizontalAlignment="Left" Margin="10,72,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.727,0.839"/>
+                    <Label Content="Kalan Karakter Sayısı:" HorizontalAlignment="Left" Margin="10,103,0,0" VerticalAlignment="Top"/>
+                    <Label Content="..." HorizontalAlignment="Left" Margin="263,10,0,0" VerticalAlignment="Top"/>
+                    <Label Content="..." HorizontalAlignment="Left" Margin="263,41,0,0" VerticalAlignment="Top"/>
+                    <Label Content="..." HorizontalAlignment="Left" Margin="263,72,0,0" VerticalAlignment="Top"/>
+                    <Label Content="..." HorizontalAlignment="Left" Margin="263,103,0,0" VerticalAlignment="Top"/>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Kanal Bilgileri">
+                <Grid Background="#FFE5E5E5">
+                    <Label Content="Toplam Yazılan Bit:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
+                    <Label Content="R Kanalında Değişen Bit Sayısı:" HorizontalAlignment="Left" Margin="10,41,0,0" VerticalAlignment="Top"/>
+                    <Label Content="G Kanalında Değişen Bit Sayısı:" HorizontalAlignment="Left" Margin="10,72,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.727,0.839"/>
+                    <Label Content="B Kanalında Değişen Bit Sayısı:" HorizontalAlignment="Left" Margin="10,103,0,0" VerticalAlignment="Top"/>
+                    <Label Content="..." HorizontalAlignment="Left" Margin="263,10,0,0" VerticalAlignment="Top"/>
+                    <Label Content="..." HorizontalAlignment="Left" Margin="263,41,0,0" VerticalAlignment="Top"/>
+                    <Label Content="..." HorizontalAlignment="Left" Margin="263,72,0,0" VerticalAlignment="Top"/>
+                    <Label Content="..." HorizontalAlignment="Left" Margin="263,103,0,0" VerticalAlignment="Top"/>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Histogramlar">
+                <Grid Background="#FFE5E5E5"/>
+            </TabItem>
+        </TabControl>
+        <ComboBox HorizontalAlignment="Left" VerticalAlignment="Top" Width="227" Margin="265,165,0,0">
+            <ComboBoxItem Content="Otomatik"/>
+            <ComboBoxItem Content="R"/>
+            <ComboBoxItem Content="G"/>
+            <ComboBoxItem Content="B"/>
+        </ComboBox>
+        <Viewbox HorizontalAlignment="Left" Height="102"  Margin="265,58,0,0" VerticalAlignment="Top" Width="227">
+            <Border BorderThickness="1" BorderBrush="Black">
+                <TextBox HorizontalAlignment="Left" Height="102" TextWrapping="Wrap" VerticalAlignment="Top" Width="227"/>
+            </Border>
+        </Viewbox>
+        <Label Content="Gizlenecek Veri:" HorizontalAlignment="Left" Margin="260,27,0,0" VerticalAlignment="Top"/>
+    </Grid>
+</Window>
