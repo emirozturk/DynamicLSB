@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         Title="LSB" Height="568.734" Width="771.464">
     <Grid RenderTransformOrigin="0.499,0.375">
-        <Button x:Name="btnLoadSource" Content="Kaynak Dosya Aç" HorizontalAlignment="Left" Margin="10,275,0,0" VerticalAlignment="Top" Width="250" Height="28"/>
+        <Button x:Name="btnLoadSource" Content="Kaynak Dosya Aç" HorizontalAlignment="Left" Margin="10,275,0,0" VerticalAlignment="Top" Width="250" Height="28" Click="BtnLoadSource_Click"/>
         <Viewbox HorizontalAlignment="Left" Height="250" Margin="10,20,0,0" VerticalAlignment="Top" Width="250">
             <Border BorderThickness="1" BorderBrush="Black">
                 <Image x:Name="imgSource"  Width="250" Height="250 "/>
@@ -18,8 +18,8 @@
                 <Image x:Name="imgModified"  Width="250" Height="250 "/>
             </Border>
         </Viewbox>
-        <Button x:Name="btnLoadModified" Content="Stego Dosya Kaydet" HorizontalAlignment="Left" Margin="500,275,0,0" VerticalAlignment="Top" Width="250" Height="28"/>
-        <Button x:Name="btnHide" Content="Gizle" HorizontalAlignment="Left" Margin="308,192,0,0" VerticalAlignment="Top" Width="141" Height="28"/>
+        <Button x:Name="btnSaveModified" Content="Stego Dosya Kaydet" HorizontalAlignment="Left" Margin="500,275,0,0" VerticalAlignment="Top" Width="250" Height="28" Click="BtnSaveModified_Click"/>
+        <Button x:Name="btnHide" Content="Gizle" HorizontalAlignment="Left" Margin="308,192,0,0" VerticalAlignment="Top" Width="141" Height="28" Click="BtnHide_Click"/>
         <TabControl HorizontalAlignment="Left" Height="220" Margin="10,308,0,0" VerticalAlignment="Top" Width="740">
             <TabItem Header="Kaynak Bilgileri">
                 <Grid Background="#FFE5E5E5">
@@ -48,9 +48,6 @@
             <TabItem Header="Histogramlar">
                 <Grid Background="#FFE5E5E5"/>
             </TabItem>
-            <TabItem Header="Kaydet">
-                <Grid Background="#FFE5E5E5"/>
-            </TabItem>
         </TabControl>
         <ComboBox x:Name="cmbChannel" HorizontalAlignment="Left" VerticalAlignment="Top" Width="227" Margin="265,165,0,0">
             <ComboBoxItem Content="Otomatik"/>
@@ -60,7 +57,7 @@
         </ComboBox>
         <Viewbox HorizontalAlignment="Left" Height="102"  Margin="265,58,0,0" VerticalAlignment="Top" Width="227">
             <Border BorderThickness="1" BorderBrush="Black">
-                <TextBox x:Name="tbInput" HorizontalAlignment="Left" Height="102" TextWrapping="Wrap" VerticalAlignment="Top" Width="227"/>
+                <TextBox x:Name="tbInput" HorizontalAlignment="Left" Height="102" TextWrapping="Wrap" VerticalAlignment="Top" Width="227" TextChanged="TbInput_TextChanged"/>
             </Border>
         </Viewbox>
         <Label Content="Gizlenecek Veri:" HorizontalAlignment="Left" Margin="260,27,0,0" VerticalAlignment="Top"/>
