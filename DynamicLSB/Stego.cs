@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Windows.Controls;
@@ -13,7 +14,10 @@ namespace DynamicLSB
         {
             return Encoding.ASCII.GetBytes(Text);
         }
-
+        internal static string ByteArrayToString(byte[] Array)
+        {
+            return Encoding.ASCII.GetString(Array);
+        }
         internal static int CalculateChange(byte[] First, byte[] Second)
         {
             return (from x in First
@@ -23,19 +27,31 @@ namespace DynamicLSB
 
         internal static BitmapImage Hide(StegoBitmap bitmapImage, string text, Channel channel)
         {
-            byte[] modifiedChannel = bitmapImage.GetInBytes(channel);
-
+            byte[] sourceChannel = bitmapImage.GetInBytes(channel);
+            bool[] stegoBits = StringToByteArray(text).SelectMany(x => ByteToBoolArray(x)).ToArray();
+            for (int i = 0; i < stegoBits.Length; i++)
+                if (sourceChannel[i] % 2 == 0 && stegoBits[i])
+                    sourceChannel[i]++;
+                else if (sourceChannel[i] % 2 == 1 && !stegoBits[i])
+                    sourceChannel[i]--;
+            return new StegoBitmap(bitmapImage, sourceChannel, channel).GetImage();
         }
-        internal static string GetHiddenValue(StegoBitmap bitmapImage,Channel channel)
+        internal static string GetHiddenValue(StegoBitmap bitmapImage, Channel channel)
         {
             byte[] hidden = bitmapImage.GetInBytes(channel);
-
+            bool[] bits = hidden.SelectMany(x => GetNLastBit(x, 1)).ToArray();
+            List<byte> bytes = new List<byte>();
+            for (int i = 0; i < bits.Length; i += 8)
+                bytes.Add(BoolArrayToByte(bits.Skip(i).Take(8).ToArray()));
+            return ByteArrayToString(bytes.Skip(2).Take(bytes[2]).ToArray());
         }
 
-        internal static bool HasHiddenValue(StegoBitmap bitmapImage)
+        internal static Channel? HasHiddenValue(StegoBitmap bitmapImage)
         {
-            if (HasE(bitmapImage.GetRinBytes()) || HasE(bitmapImage.GetRinBytes()) || HasE(bitmapImage.GetRinBytes())) return true;
-            else return false;
+            if (HasE(bitmapImage.RedArray)) return Channel.R;
+            else if (HasE(bitmapImage.GreenArray)) return Channel.G;
+            else if (HasE(bitmapImage.BlueArray)) return Channel.B;
+            else return null;
         }
 
         private static bool HasE(byte[] v)

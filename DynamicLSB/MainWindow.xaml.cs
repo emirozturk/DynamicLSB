@@ -18,10 +18,10 @@ namespace DynamicLSB
 {
     public partial class MainWindow : Window
     {
-        OpenFileDialog ofd = new OpenFileDialog();
+        readonly OpenFileDialog ofd = new OpenFileDialog();
+        readonly string resultsFolder = "/Sonuclar/";
         StegoBitmap sourceBitmap;
         StegoBitmap modifiedBitmap;
-        string resultsFolder = "/Sonuclar/";
         public MainWindow()
         {
             InitializeComponent();
@@ -38,8 +38,9 @@ namespace DynamicLSB
         {
             sourceBitmap = new StegoBitmap(ofd.FileName);
             imgSource.Source = sourceBitmap.GetImage();
-            if (Stego.HasHiddenValue(sourceBitmap))
-                tbInput.Text = Stego.GetHiddenValue(sourceBitmap);
+            Channel? result = Stego.HasHiddenValue(sourceBitmap);
+            if (result.HasValue)
+                tbInput.Text = Stego.GetHiddenValue(sourceBitmap,result.Value);
             else
                 CalculateLabels();
         }
@@ -51,22 +52,24 @@ namespace DynamicLSB
             lblUsedCapacity.Content = tbInput.Text.Length;
             lblRemainingCapacity.Content = (sourceBitmap.GetMaxCapacity() - tbInput.Text.Length);
             lblTotalWrittenBits.Content = tbInput.Text.Length * 8;
-            lblChangeInR.Content = Stego.CalculateChange(sourceBitmap.GetRinBytes(), Stego.StringToByteArray(tbInput.Text));
-            lblChangeInR.Content = Stego.CalculateChange(sourceBitmap.GetGinBytes(), Stego.StringToByteArray(tbInput.Text));
-            lblChangeInR.Content = Stego.CalculateChange(sourceBitmap.GetBinBytes(), Stego.StringToByteArray(tbInput.Text));
+            lblChangeInR.Content = Stego.CalculateChange(sourceBitmap.RedArray, Stego.StringToByteArray(tbInput.Text));
+            lblChangeInR.Content = Stego.CalculateChange(sourceBitmap.GreenArray, Stego.StringToByteArray(tbInput.Text));
+            lblChangeInR.Content = Stego.CalculateChange(sourceBitmap.BlueArray, Stego.StringToByteArray(tbInput.Text));
         }
 
         private void SaveLabels()
         {
-            List<string> output = new List<string>();
-            output.Add(lblFileSize.Content.ToString());
-            output.Add(lblMaxCapacity.Content.ToString());
-            output.Add(lblUsedCapacity.Content.ToString());
-            output.Add(lblRemainingCapacity.Content.ToString());
-            output.Add(lblTotalWrittenBits.Content.ToString());
-            output.Add(lblChangeInR.Content.ToString());
-            output.Add(lblChangeInR.Content.ToString());
-            output.Add(lblChangeInR.Content.ToString());
+            List<string> output = new List<string>
+            {
+                lblFileSize.Content.ToString(),
+                lblMaxCapacity.Content.ToString(),
+                lblUsedCapacity.Content.ToString(),
+                lblRemainingCapacity.Content.ToString(),
+                lblTotalWrittenBits.Content.ToString(),
+                lblChangeInR.Content.ToString(),
+                lblChangeInR.Content.ToString(),
+                lblChangeInR.Content.ToString()
+            };
             System.IO.File.WriteAllLines(resultsFolder + "sonuclar.txt", output);
         }
 
@@ -75,9 +78,9 @@ namespace DynamicLSB
             Channel channel;
             if (cmbChannel.SelectedValue.ToString() == "Otomatik")
             {
-                int changeInRed = Stego.CalculateChange(sourceBitmap.GetRinBytes(), Stego.StringToByteArray(tbInput.Text));
-                int changeInGreen = Stego.CalculateChange(sourceBitmap.GetGinBytes(), Stego.StringToByteArray(tbInput.Text));
-                int changeInBlue = Stego.CalculateChange(sourceBitmap.GetBinBytes(), Stego.StringToByteArray(tbInput.Text));
+                int changeInRed = Stego.CalculateChange(sourceBitmap.RedArray, Stego.StringToByteArray(tbInput.Text));
+                int changeInGreen = Stego.CalculateChange(sourceBitmap.GreenArray, Stego.StringToByteArray(tbInput.Text));
+                int changeInBlue = Stego.CalculateChange(sourceBitmap.BlueArray, Stego.StringToByteArray(tbInput.Text));
                 int min = changeInRed;
                 if (changeInGreen < min) min = changeInGreen;
                 if (changeInBlue < min) min = changeInBlue;

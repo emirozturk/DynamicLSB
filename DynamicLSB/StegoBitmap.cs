@@ -11,23 +11,74 @@ namespace DynamicLSB
 {
     class StegoBitmap
     {
-        private BitmapImage sourceFile;
-        private long fileSize;
-        private byte[] redArray;
-        private byte[] greenArray;
-        private byte[] blueArray;
-        private BitmapImage bitmapImage;
+        readonly private BitmapImage sourceFile;
+        public long FileSize { get; }
+        public byte[] RedArray { get; }
+        public byte[] GreenArray { get; }
+        public byte[] BlueArray { get; }
+        public byte[] AlphaArray { get; }
 
-        public StegoBitmap(string filePath)
-        {
-            sourceFile = new BitmapImage(new Uri(filePath));
-            fileSize = new FileInfo(filePath).Length;
-            redArray = sourceFile.
-        }
+        public int Stride { get; }
 
+        public StegoBitmap(string filePath) : this(new BitmapImage(new Uri(filePath))) { }
         public StegoBitmap(BitmapImage bitmapImage)
         {
-            this.bitmapImage = bitmapImage;
+            sourceFile = bitmapImage;
+            FileSize = Convert.ToInt32(sourceFile.Width * sourceFile.Height * 4);
+            Stride = Convert.ToInt32(sourceFile.Width * 4);
+            int arraySize = Convert.ToInt32(Stride * sourceFile.Height);
+            byte[] bitmapArray = new byte[arraySize]; //R-G-B-A byte array
+
+            sourceFile.CopyPixels(bitmapArray, Stride, 0);
+            RedArray = bitmapArray.Where((element, index) => index % 4 == 0).ToArray();
+            GreenArray = bitmapArray.Where((element, index) => index % 4 == 1).ToArray();
+            BlueArray = bitmapArray.Where((element, index) => index % 4 == 2).ToArray();
+            AlphaArray = bitmapArray.Where((element, index) => index % 4 == 3).ToArray();
+        }
+        public StegoBitmap(StegoBitmap stegoBitmap, byte[] changedChannel, Channel channel)
+        {
+            RedArray = stegoBitmap.RedArray;
+            GreenArray = stegoBitmap.GreenArray;
+            BlueArray = stegoBitmap.BlueArray;
+            AlphaArray = stegoBitmap.AlphaArray;
+
+            if (channel == Channel.R) RedArray = changedChannel;
+            if (channel == Channel.G) GreenArray = changedChannel;
+            if (channel == Channel.B) BlueArray = changedChannel;
+
+            int arraySize = Convert.ToInt32(stegoBitmap.Stride * stegoBitmap.sourceFile.Height);
+            byte[] bitmapArray = new byte[arraySize];
+
+            int counter = 0;
+            for (int i = 0; i < RedArray.Length; i += 4)
+            {
+                bitmapArray[i] = RedArray[counter];
+                bitmapArray[i + 1] = RedArray[counter];
+                bitmapArray[i + 2] = RedArray[counter];
+                bitmapArray[i + 3] = RedArray[counter];
+                counter++;
+            }
+            BitmapImage sf = stegoBitmap.sourceFile;
+            BitmapSource bs = BitmapSource.Create((int)sf.Width, (int)sf.Height, sf.DpiX, sf.DpiY, sf.Format, sf.Palette, bitmapArray, stegoBitmap.Stride);
+            sourceFile = BitmapSourceToBitmapImage(bs);
+        }
+
+        private BitmapImage BitmapSourceToBitmapImage(BitmapSource bs)
+        {
+            BitmapImage bImg = new BitmapImage();
+            BmpBitmapEncoder encoder = new BmpBitmapEncoder();
+            encoder.Frames.Add(BitmapFrame.Create(bs));
+            MemoryStream memoryStream = new MemoryStream();
+            encoder.Save(memoryStream);
+
+            memoryStream.Position = 0;
+            bImg.BeginInit();
+            bImg.StreamSource = memoryStream;
+            bImg.EndInit();
+
+            memoryStream.Close();
+
+            return bImg;
         }
 
         internal BitmapImage GetImage()
@@ -37,33 +88,18 @@ namespace DynamicLSB
 
         internal int GetMaxCapacity()
         {
-            return Convert.ToInt32(sourceFile.Width * sourceFile.Height - 3); //First byte for 'E' second byte for length
+            return Convert.ToInt32(sourceFile.Width * sourceFile.Height - 2); //First byte for 'E' second byte for length
         }
 
         internal long GetFileSize()
         {
-            return fileSize;
-        }
-
-        internal byte[] GetRinBytes()
-        {
-            return redArray;
-        }
-
-        internal byte[] GetGinBytes()
-        {
-            return greenArray;
-        }
-
-        internal byte[] GetBinBytes()
-        {
-            return blueArray;
+            return FileSize;
         }
         internal byte[] GetInBytes(Channel channel)
         {
-            if (channel == Channel.R) return GetRinBytes();
-            if (channel == Channel.G) return GetGinBytes();
-            if (channel == Channel.B) return GetBinBytes();
+            if (channel == Channel.R) return RedArray;
+            if (channel == Channel.G) return GreenArray;
+            if (channel == Channel.B) return BlueArray;
             else return null;
         }
         internal void SaveBitmap(string FilePath)
