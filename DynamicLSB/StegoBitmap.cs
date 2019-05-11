@@ -11,7 +11,7 @@ namespace DynamicLSB
 {
     class StegoBitmap
     {
-        readonly private BitmapImage sourceFile;
+        private BitmapImage sourceFile;
         public long FileSize { get; }
         public byte[] RedArray { get; }
         public byte[] GreenArray { get; }
@@ -53,32 +53,29 @@ namespace DynamicLSB
             for (int i = 0; i < RedArray.Length; i += 4)
             {
                 bitmapArray[i] = RedArray[counter];
-                bitmapArray[i + 1] = RedArray[counter];
-                bitmapArray[i + 2] = RedArray[counter];
-                bitmapArray[i + 3] = RedArray[counter];
+                bitmapArray[i + 1] = GreenArray[counter];
+                bitmapArray[i + 2] = BlueArray[counter];
+                bitmapArray[i + 3] = AlphaArray[counter];
                 counter++;
             }
             BitmapImage sf = stegoBitmap.sourceFile;
             BitmapSource bs = BitmapSource.Create((int)sf.Width, (int)sf.Height, sf.DpiX, sf.DpiY, sf.Format, sf.Palette, bitmapArray, stegoBitmap.Stride);
-            sourceFile = BitmapSourceToBitmapImage(bs);
+            BitmapSourceToBitmapImage(bs);
         }
 
-        private BitmapImage BitmapSourceToBitmapImage(BitmapSource bs)
+        private void BitmapSourceToBitmapImage(BitmapSource bs)
         {
-            BitmapImage bImg = new BitmapImage();
+            sourceFile = new BitmapImage();
             BmpBitmapEncoder encoder = new BmpBitmapEncoder();
             encoder.Frames.Add(BitmapFrame.Create(bs));
-            MemoryStream memoryStream = new MemoryStream();
-            encoder.Save(memoryStream);
-
-            memoryStream.Position = 0;
-            bImg.BeginInit();
-            bImg.StreamSource = memoryStream;
-            bImg.EndInit();
-
-            memoryStream.Close();
-
-            return bImg;
+            using (MemoryStream memoryStream = new MemoryStream())
+            {
+                encoder.Save(memoryStream);
+                memoryStream.Position = 0;
+                sourceFile.BeginInit();
+                sourceFile.StreamSource = new MemoryStream(memoryStream.ToArray());
+                sourceFile.EndInit();
+            }
         }
 
         internal BitmapImage GetImage()
@@ -88,13 +85,9 @@ namespace DynamicLSB
 
         internal int GetMaxCapacity()
         {
-            return Convert.ToInt32(sourceFile.Width * sourceFile.Height - 2); //First byte for 'E' second byte for length
+            return Convert.ToInt32(sourceFile.Width * sourceFile.Height / 8) - 2; //First byte for 'E' second byte for length
         }
 
-        internal long GetFileSize()
-        {
-            return FileSize;
-        }
         internal byte[] GetInBytes(Channel channel)
         {
             if (channel == Channel.R) return RedArray;
@@ -104,7 +97,7 @@ namespace DynamicLSB
         }
         internal void SaveBitmap(string FilePath)
         {
-            BitmapEncoder encoder = new PngBitmapEncoder();
+            BitmapEncoder encoder = new BmpBitmapEncoder();
             encoder.Frames.Add(BitmapFrame.Create(sourceFile));
 
             using (var fileStream = new System.IO.FileStream(FilePath, System.IO.FileMode.Create))

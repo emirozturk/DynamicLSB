@@ -20,15 +20,20 @@ namespace DynamicLSB
         }
         internal static int CalculateChange(byte[] First, byte[] Second)
         {
-            return (from x in First
-                    from y in Second
-                    select x - y).Sum();
+            bool[] secondBits = Second.SelectMany(x => ByteToBoolArray(x)).ToArray();
+            bool[] firstBits = First.Take(secondBits.Length).SelectMany(x => GetNLastBit(x, 1)).ToArray();
+            int count = 0;
+            for (int i = 0; i < secondBits.Length; i++)
+                if (firstBits[i] != secondBits[i])
+                    count++;
+            return count;
         }
 
         internal static BitmapImage Hide(StegoBitmap bitmapImage, string text, Channel channel)
         {
             byte[] sourceChannel = bitmapImage.GetInBytes(channel);
-            bool[] stegoBits = StringToByteArray(text).SelectMany(x => ByteToBoolArray(x)).ToArray();
+            bool[] stegoBits = StringToByteArray("E"+text).SelectMany(x => ByteToBoolArray(x)).ToArray();
+
             for (int i = 0; i < stegoBits.Length; i++)
                 if (sourceChannel[i] % 2 == 0 && stegoBits[i])
                     sourceChannel[i]++;

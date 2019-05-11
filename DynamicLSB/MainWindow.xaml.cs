@@ -29,7 +29,7 @@ namespace DynamicLSB
 
         private void BtnLoadSource_Click(object sender, RoutedEventArgs e)
         {
-            ofd.Filter = "Jpeg Dosyası|*.jpg|Png Dosyası|*.png|Bmp Dosyası|*.bmp";
+            ofd.Filter = "Jpeg Dosyası|*.jpg|Png Dosyası|*.png|Bmp Dosyası|*.bmp|Gif Dosyası|*.gif";
             ofd.FileOk += Ofd_FileOk;
             ofd.ShowDialog();
         }
@@ -47,14 +47,14 @@ namespace DynamicLSB
 
         private void CalculateLabels()
         {
-            lblFileSize.Content = sourceBitmap.GetFileSize();
+            lblFileSize.Content = sourceBitmap.FileSize;
             lblMaxCapacity.Content = sourceBitmap.GetMaxCapacity();
             lblUsedCapacity.Content = tbInput.Text.Length;
             lblRemainingCapacity.Content = (sourceBitmap.GetMaxCapacity() - tbInput.Text.Length);
             lblTotalWrittenBits.Content = tbInput.Text.Length * 8;
             lblChangeInR.Content = Stego.CalculateChange(sourceBitmap.RedArray, Stego.StringToByteArray(tbInput.Text));
-            lblChangeInR.Content = Stego.CalculateChange(sourceBitmap.GreenArray, Stego.StringToByteArray(tbInput.Text));
-            lblChangeInR.Content = Stego.CalculateChange(sourceBitmap.BlueArray, Stego.StringToByteArray(tbInput.Text));
+            lblChangeInG.Content = Stego.CalculateChange(sourceBitmap.GreenArray, Stego.StringToByteArray(tbInput.Text));
+            lblChangeInB.Content = Stego.CalculateChange(sourceBitmap.BlueArray, Stego.StringToByteArray(tbInput.Text));
         }
 
         private void SaveLabels()
@@ -76,7 +76,7 @@ namespace DynamicLSB
         private void BtnHide_Click(object sender, RoutedEventArgs e)
         {
             Channel channel;
-            if (cmbChannel.SelectedValue.ToString() == "Otomatik")
+            if (((ComboBoxItem)cmbChannel.SelectedItem).Content.ToString() == "Otomatik")
             {
                 int changeInRed = Stego.CalculateChange(sourceBitmap.RedArray, Stego.StringToByteArray(tbInput.Text));
                 int changeInGreen = Stego.CalculateChange(sourceBitmap.GreenArray, Stego.StringToByteArray(tbInput.Text));
