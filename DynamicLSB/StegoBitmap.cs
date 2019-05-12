@@ -6,104 +6,88 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Drawing.Imaging;
+using System.Drawing;
 
 namespace DynamicLSB
 {
     class StegoBitmap
     {
-        private BitmapImage sourceFile;
+        readonly private Bitmap sourceFile;
         public long FileSize { get; }
-        public byte[] RedArray { get; }
-        public byte[] GreenArray { get; }
-        public byte[] BlueArray { get; }
-        public byte[] AlphaArray { get; }
+        public byte[] RedChannel { get; }
+        public byte[] GreenChannel { get; }
+        public byte[] BlueChannel { get; }
 
-        public int Stride { get; }
-
-        public StegoBitmap(string filePath) : this(new BitmapImage(new Uri(filePath))) { }
-        public StegoBitmap(BitmapImage bitmapImage)
+        public StegoBitmap(string filePath) : this(new Bitmap(filePath)) { }
+        public StegoBitmap(Bitmap bitmap)
         {
-            sourceFile = bitmapImage;
+            sourceFile = bitmap;
             FileSize = Convert.ToInt32(sourceFile.Width * sourceFile.Height * 4);
-            Stride = Convert.ToInt32(sourceFile.Width * 4);
-            int arraySize = Convert.ToInt32(Stride * sourceFile.Height);
-            byte[] bitmapArray = new byte[arraySize]; //R-G-B-A byte array
 
-            sourceFile.CopyPixels(bitmapArray, Stride, 0);
-            RedArray = bitmapArray.Where((element, index) => index % 4 == 0).ToArray();
-            GreenArray = bitmapArray.Where((element, index) => index % 4 == 1).ToArray();
-            BlueArray = bitmapArray.Where((element, index) => index % 4 == 2).ToArray();
-            AlphaArray = bitmapArray.Where((element, index) => index % 4 == 3).ToArray();
+            RedChannel = ReadChannel(bitmap, Channel.R);
+            GreenChannel = ReadChannel(bitmap, Channel.G);
+            BlueChannel = ReadChannel(bitmap, Channel.B);
         }
+
         public StegoBitmap(StegoBitmap stegoBitmap, byte[] changedChannel, Channel channel)
         {
-            RedArray = stegoBitmap.RedArray;
-            GreenArray = stegoBitmap.GreenArray;
-            BlueArray = stegoBitmap.BlueArray;
-            AlphaArray = stegoBitmap.AlphaArray;
+            RedChannel = stegoBitmap.RedChannel;
+            GreenChannel = stegoBitmap.GreenChannel;
+            BlueChannel = stegoBitmap.BlueChannel;
 
-            if (channel == Channel.R) RedArray = changedChannel;
-            if (channel == Channel.G) GreenArray = changedChannel;
-            if (channel == Channel.B) BlueArray = changedChannel;
+            if (channel == Channel.R) RedChannel = changedChannel;
+            if (channel == Channel.G) GreenChannel = changedChannel;
+            if (channel == Channel.B) BlueChannel = changedChannel;
 
-            int arraySize = Convert.ToInt32(stegoBitmap.Stride * stegoBitmap.sourceFile.Height);
-            byte[] bitmapArray = new byte[arraySize];
+            sourceFile = new Bitmap(stegoBitmap.sourceFile.Width, stegoBitmap.sourceFile.Height);
 
             int counter = 0;
-            for (int i = 0; i < RedArray.Length; i += 4)
-            {
-                bitmapArray[i] = RedArray[counter];
-                bitmapArray[i + 1] = GreenArray[counter];
-                bitmapArray[i + 2] = BlueArray[counter];
-                bitmapArray[i + 3] = AlphaArray[counter];
-                counter++;
-            }
-            BitmapImage sf = stegoBitmap.sourceFile;
-            BitmapSource bs = BitmapSource.Create((int)sf.Width, (int)sf.Height, sf.DpiX, sf.DpiY, sf.Format, sf.Palette, bitmapArray, stegoBitmap.Stride);
-            BitmapSourceToBitmapImage(bs);
+            for (int i = 0; i < sourceFile.Width; i++)
+                for (int j = 0; j < sourceFile.Height; j++)
+                {
+                    sourceFile.SetPixel(i, j, System.Drawing.Color.FromArgb(RedChannel[counter], GreenChannel[counter], BlueChannel[counter]));
+                    counter++;
+                }
         }
 
-        private void BitmapSourceToBitmapImage(BitmapSource bs)
-        {
-            sourceFile = new BitmapImage();
-            BmpBitmapEncoder encoder = new BmpBitmapEncoder();
-            encoder.Frames.Add(BitmapFrame.Create(bs));
-            using (MemoryStream memoryStream = new MemoryStream())
-            {
-                encoder.Save(memoryStream);
-                memoryStream.Position = 0;
-                sourceFile.BeginInit();
-                sourceFile.StreamSource = new MemoryStream(memoryStream.ToArray());
-                sourceFile.EndInit();
-            }
-        }
-
-        internal BitmapImage GetImage()
+        internal Bitmap GetImage()
         {
             return sourceFile;
         }
 
         internal int GetMaxCapacity()
         {
-            return Convert.ToInt32(sourceFile.Width * sourceFile.Height / 8) - 2; //First byte for 'E' second byte for length
+            return Convert.ToInt32(sourceFile.Width * sourceFile.Height / 8);
         }
 
-        internal byte[] GetInBytes(Channel channel)
+        internal byte[] GetChannel(Channel channel)
         {
-            if (channel == Channel.R) return RedArray;
-            if (channel == Channel.G) return GreenArray;
-            if (channel == Channel.B) return BlueArray;
+            if (channel == Channel.R) return RedChannel;
+            if (channel == Channel.G) return GreenChannel;
+            if (channel == Channel.B) return BlueChannel;
             else return null;
         }
+        private byte[] ReadChannel(Bitmap bitmap, Channel channel)
+        {
+            byte[] array = new byte[bitmap.Width * bitmap.Height];
+            int counter = 0;
+            for (int i = 0; i < bitmap.Width; i++)
+                for (int j = 0; j < bitmap.Height; j++)
+                    if (channel == Channel.R)
+                        array[counter++] = bitmap.GetPixel(i, j).R;
+                    else if (channel == Channel.G)
+                        array[counter++] = bitmap.GetPixel(i, j).G;
+                    else if (channel == Channel.B)
+                        array[counter++] = bitmap.GetPixel(i, j).B;
+            return array;
+        }
+
         internal void SaveBitmap(string FilePath)
         {
-            BitmapEncoder encoder = new BmpBitmapEncoder();
-            encoder.Frames.Add(BitmapFrame.Create(sourceFile));
-
-            using (var fileStream = new System.IO.FileStream(FilePath, System.IO.FileMode.Create))
-            {
-                encoder.Save(fileStream);
-            }
+            if (File.Exists(FilePath))
+                File.Delete(FilePath);
+            sourceFile.Save(FilePath);
         }
     }
 }

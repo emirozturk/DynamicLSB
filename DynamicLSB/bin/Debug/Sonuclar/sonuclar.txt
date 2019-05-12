@@ -1,0 +1,9 @@
+DosyaBoyutu: 1048576
+Maksimum Yazılabilecek Byte: 32768
+Kullanılan Byte Sayısı: 12
+Kalan Byte Sayısı: 32756
+-----------------------------------------------------------------
+Toplam yazılan Bit Sayısı: 96
+R Kanalındaki değişim (Bit): 50
+G Kanalındaki değişim (Bit): 47
+B Kanalındaki değişim (Bit): 46

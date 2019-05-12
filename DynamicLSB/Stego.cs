@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Controls;
@@ -29,33 +30,80 @@ namespace DynamicLSB
             return count;
         }
 
-        internal static BitmapImage Hide(StegoBitmap bitmapImage, string text, Channel channel)
+        internal static Bitmap Hide(StegoBitmap bitmap, string text, Channel channel)
         {
-            byte[] sourceChannel = bitmapImage.GetInBytes(channel);
-            bool[] stegoBits = StringToByteArray("E"+text).SelectMany(x => ByteToBoolArray(x)).ToArray();
+            byte[] sourceChannel = bitmap.GetChannel(channel);
+            byte flag = Convert.ToByte('E');
+            byte size = GetSizeOfLength(text.Length);
+            byte[] length = GetLengthInBytes(text.Length, size);
+            byte[] stegoText = StringToByteArray(text);
+
+            byte[] stegoBytes = new byte[1 + 1 + length.Length + stegoText.Length];
+            stegoBytes[0] = flag;
+            stegoBytes[1] = size;
+            int counter = 0;
+            for (int i = 0; i < length.Length; i++)stegoBytes[i+2] = length[counter++];
+            counter = 0;
+            for (int i = 0; i <stegoText.Length; i++)stegoBytes[i+2+length.Length] = stegoText[counter++];
+
+            bool[] stegoBits = stegoBytes.SelectMany(x => ByteToBoolArray(x)).ToArray();
 
             for (int i = 0; i < stegoBits.Length; i++)
-                if (sourceChannel[i] % 2 == 0 && stegoBits[i])
+                if ((sourceChannel[i] % 2 == 0) && stegoBits[i])
                     sourceChannel[i]++;
-                else if (sourceChannel[i] % 2 == 1 && !stegoBits[i])
+                else if ((sourceChannel[i] % 2 == 1) && !stegoBits[i])
                     sourceChannel[i]--;
-            return new StegoBitmap(bitmapImage, sourceChannel, channel).GetImage();
+            return new StegoBitmap(bitmap, sourceChannel, channel).GetImage();
         }
-        internal static string GetHiddenValue(StegoBitmap bitmapImage, Channel channel)
+
+        private static byte[] GetLengthInBytes(int Length, int SizeOfLength)
         {
-            byte[] hidden = bitmapImage.GetInBytes(channel);
-            bool[] bits = hidden.SelectMany(x => GetNLastBit(x, 1)).ToArray();
+            if (SizeOfLength == 1)
+                return new byte[1] { (byte)Length };
+            else if (SizeOfLength == 2)
+                return BitConverter.GetBytes((short)Length);
+            else
+                return BitConverter.GetBytes(Length);
+        }
+
+        private static byte GetSizeOfLength(int length)
+        {
+            if (length > 0 && length < 256) return 1;
+            else if (length < 65536) return 2;
+            else return 4;
+        }
+
+        internal static string GetHiddenValue(StegoBitmap bitmap, Channel channel)
+        {
+            byte[] hidden = bitmap.GetChannel(channel);
+
+            bool[] headerBits = hidden.Take(16).SelectMany(x => GetNLastBit(x, 1)).ToArray();
+            byte E = BoolArrayToByte(headerBits.Take(8).ToArray());
+            byte lengthSize = BoolArrayToByte(headerBits.Skip(8).Take(8).ToArray());
+            bool[] lengthBits = hidden.Skip(16).Take(lengthSize * 8).SelectMany(x => GetNLastBit(x, 1)).ToArray();
+            List<byte> lengthBytes = new List<byte>();
+            for (int i = 0; i < lengthBits.Length; i += 8)
+                lengthBytes.Add(BoolArrayToByte(lengthBits.Skip(i).Take(8).ToArray()));
+            int length = GetIntFromBytes(lengthBytes);
+
+            bool[] bits = hidden.Skip(16+lengthSize*8).Take(length*8).SelectMany(x => GetNLastBit(x, 1)).ToArray();
             List<byte> bytes = new List<byte>();
             for (int i = 0; i < bits.Length; i += 8)
                 bytes.Add(BoolArrayToByte(bits.Skip(i).Take(8).ToArray()));
-            return ByteArrayToString(bytes.Skip(2).Take(bytes[2]).ToArray());
+            return ByteArrayToString(bytes.ToArray());
+        }
+
+        private static int GetIntFromBytes(List<byte> lengthBytes)
+        {
+            while (lengthBytes.Count < 8) lengthBytes.Add(0);
+            return BitConverter.ToInt32(lengthBytes.ToArray(), 0);
         }
 
         internal static Channel? HasHiddenValue(StegoBitmap bitmapImage)
         {
-            if (HasE(bitmapImage.RedArray)) return Channel.R;
-            else if (HasE(bitmapImage.GreenArray)) return Channel.G;
-            else if (HasE(bitmapImage.BlueArray)) return Channel.B;
+            if (HasE(bitmapImage.RedChannel)) return Channel.R;
+            else if (HasE(bitmapImage.GreenChannel)) return Channel.G;
+            else if (HasE(bitmapImage.BlueChannel)) return Channel.B;
             else return null;
         }
 

@@ -1,6 +1,8 @@
 ﻿using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,7 +21,7 @@ namespace DynamicLSB
     public partial class MainWindow : Window
     {
         readonly OpenFileDialog ofd = new OpenFileDialog();
-        readonly string resultsFolder = "/Sonuclar/";
+        readonly string resultsFolder = "Sonuclar/";
         StegoBitmap sourceBitmap;
         StegoBitmap modifiedBitmap;
         public MainWindow()
@@ -37,12 +39,24 @@ namespace DynamicLSB
         private void Ofd_FileOk(object sender, System.ComponentModel.CancelEventArgs e)
         {
             sourceBitmap = new StegoBitmap(ofd.FileName);
-            imgSource.Source = sourceBitmap.GetImage();
+            imgSource.Source = GetSource(sourceBitmap.GetImage());
             Channel? result = Stego.HasHiddenValue(sourceBitmap);
             if (result.HasValue)
                 tbInput.Text = Stego.GetHiddenValue(sourceBitmap,result.Value);
             else
                 CalculateLabels();
+        }
+
+        private ImageSource GetSource(Bitmap bitmap)
+        {
+            MemoryStream ms = new MemoryStream();
+            bitmap.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+            ms.Position = 0;
+            BitmapImage bi = new BitmapImage();
+            bi.BeginInit();
+            bi.StreamSource = ms;
+            bi.EndInit();
+            return bi;
         }
 
         private void CalculateLabels()
@@ -52,23 +66,24 @@ namespace DynamicLSB
             lblUsedCapacity.Content = tbInput.Text.Length;
             lblRemainingCapacity.Content = (sourceBitmap.GetMaxCapacity() - tbInput.Text.Length);
             lblTotalWrittenBits.Content = tbInput.Text.Length * 8;
-            lblChangeInR.Content = Stego.CalculateChange(sourceBitmap.RedArray, Stego.StringToByteArray(tbInput.Text));
-            lblChangeInG.Content = Stego.CalculateChange(sourceBitmap.GreenArray, Stego.StringToByteArray(tbInput.Text));
-            lblChangeInB.Content = Stego.CalculateChange(sourceBitmap.BlueArray, Stego.StringToByteArray(tbInput.Text));
+            lblChangeInR.Content = Stego.CalculateChange(sourceBitmap.RedChannel, Stego.StringToByteArray(tbInput.Text));
+            lblChangeInG.Content = Stego.CalculateChange(sourceBitmap.GreenChannel, Stego.StringToByteArray(tbInput.Text));
+            lblChangeInB.Content = Stego.CalculateChange(sourceBitmap.BlueChannel, Stego.StringToByteArray(tbInput.Text));
         }
 
         private void SaveLabels()
         {
             List<string> output = new List<string>
             {
-                lblFileSize.Content.ToString(),
-                lblMaxCapacity.Content.ToString(),
-                lblUsedCapacity.Content.ToString(),
-                lblRemainingCapacity.Content.ToString(),
-                lblTotalWrittenBits.Content.ToString(),
-                lblChangeInR.Content.ToString(),
-                lblChangeInR.Content.ToString(),
-                lblChangeInR.Content.ToString()
+                "DosyaBoyutu: "+lblFileSize.Content.ToString(),
+                "Maksimum Yazılabilecek Byte: "+lblMaxCapacity.Content.ToString(),
+                "Kullanılan Byte Sayısı: "+lblUsedCapacity.Content.ToString(),
+                "Kalan Byte Sayısı: "+lblRemainingCapacity.Content.ToString(),
+                "-----------------------------------------------------------------",
+                "Toplam yazılan Bit Sayısı: " +lblTotalWrittenBits.Content.ToString(),
+                "R Kanalındaki değişim (Bit): "+lblChangeInR.Content.ToString(),
+                "G Kanalındaki değişim (Bit): "+lblChangeInG.Content.ToString(),
+                "B Kanalındaki değişim (Bit): "+lblChangeInB.Content.ToString()
             };
             System.IO.File.WriteAllLines(resultsFolder + "sonuclar.txt", output);
         }
@@ -78,9 +93,9 @@ namespace DynamicLSB
             Channel channel;
             if (((ComboBoxItem)cmbChannel.SelectedItem).Content.ToString() == "Otomatik")
             {
-                int changeInRed = Stego.CalculateChange(sourceBitmap.RedArray, Stego.StringToByteArray(tbInput.Text));
-                int changeInGreen = Stego.CalculateChange(sourceBitmap.GreenArray, Stego.StringToByteArray(tbInput.Text));
-                int changeInBlue = Stego.CalculateChange(sourceBitmap.BlueArray, Stego.StringToByteArray(tbInput.Text));
+                int changeInRed = Stego.CalculateChange(sourceBitmap.RedChannel, Stego.StringToByteArray(tbInput.Text));
+                int changeInGreen = Stego.CalculateChange(sourceBitmap.GreenChannel, Stego.StringToByteArray(tbInput.Text));
+                int changeInBlue = Stego.CalculateChange(sourceBitmap.BlueChannel, Stego.StringToByteArray(tbInput.Text));
                 int min = changeInRed;
                 if (changeInGreen < min) min = changeInGreen;
                 if (changeInBlue < min) min = changeInBlue;
@@ -91,7 +106,7 @@ namespace DynamicLSB
             else
                 channel = (Channel)(cmbChannel.SelectedIndex - 1);
             modifiedBitmap = new StegoBitmap(Stego.Hide(sourceBitmap, tbInput.Text, channel));
-            imgModified.Source = modifiedBitmap.GetImage();
+            imgModified.Source = GetSource(modifiedBitmap.GetImage());
         }
 
         private void BtnSaveModified_Click(object sender, RoutedEventArgs e)
