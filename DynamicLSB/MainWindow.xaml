@@ -46,7 +46,41 @@
                 </Grid>
             </TabItem>
             <TabItem Header="Histogramlar">
-                <Grid Background="#FFE5E5E5"/>
+                <Grid Background="#FFE5E5E5">
+                    <Viewbox HorizontalAlignment="Left" Height="85" Margin="35,10,0,0" VerticalAlignment="Top" Width="172">
+                        <Border BorderThickness="1" BorderBrush="Black">
+                            <Canvas Name="imgRS" Height="85" Width="172"/>
+                        </Border>
+                    </Viewbox>
+                    <Viewbox HorizontalAlignment="Left" Height="85" Margin="35,100,0,0" VerticalAlignment="Top" Width="172">
+                        <Border BorderThickness="1" BorderBrush="Black">
+                            <Canvas Name="imgRM" Height="85" Width="172"/>
+                        </Border>
+                    </Viewbox>
+                    <Viewbox HorizontalAlignment="Left" Height="85" Margin="238,10,0,0" VerticalAlignment="Top" Width="172">
+                        <Border BorderThickness="1" BorderBrush="Black">
+                            <Canvas Name="imgGS" Height="85" Width="172"/>
+                        </Border>
+                    </Viewbox>
+                    <Viewbox HorizontalAlignment="Left" Height="85" Margin="238,100,0,0" VerticalAlignment="Top" Width="172">
+                        <Border BorderThickness="1" BorderBrush="Black">
+                            <Canvas Name="imgGM" Height="85" Width="172"/>
+                        </Border>
+                    </Viewbox>
+                    <Viewbox HorizontalAlignment="Left" Height="85" Margin="439,10,0,0" VerticalAlignment="Top" Width="172">
+                        <Border BorderThickness="1" BorderBrush="Black">
+                            <Canvas Name="imgBS" Height="85" Width="172"/>
+                        </Border>
+                    </Viewbox>
+                    <Viewbox HorizontalAlignment="Left" Height="85" Margin="439,100,0,0" VerticalAlignment="Top" Width="172">
+                        <Border BorderThickness="1" BorderBrush="Black">
+                            <Canvas Name="imgBM" Height="85" Width="172"/>
+                        </Border>
+                    </Viewbox>
+                    <Label Content="R:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
+                    <Label Content="G:" HorizontalAlignment="Left" Margin="212,10,0,0" VerticalAlignment="Top"/>
+                    <Label Content="B:" HorizontalAlignment="Left" Margin="415,10,0,0" VerticalAlignment="Top"/>
+                </Grid>
             </TabItem>
         </TabControl>
         <ComboBox x:Name="cmbChannel" HorizontalAlignment="Left" VerticalAlignment="Top" Width="227" Margin="265,165,0,0">

@@ -107,6 +107,33 @@ namespace DynamicLSB
                 channel = (Channel)(cmbChannel.SelectedIndex - 1);
             modifiedBitmap = new StegoBitmap(Stego.Hide(sourceBitmap, tbInput.Text, channel));
             imgModified.Source = GetSource(modifiedBitmap.GetImage());
+            DrawHistogram(sourceBitmap, modifiedBitmap,tbInput.Text.Length*8+200);
+        }
+
+        private void DrawHistogram(StegoBitmap sourceBitmap, StegoBitmap modifiedBitmap,int count)
+        {
+            DrawToCanvas(imgRS, sourceBitmap.RedChannel, System.Windows.Media.Colors.PaleVioletRed, count);
+            DrawToCanvas(imgRM, modifiedBitmap.RedChannel, System.Windows.Media.Colors.DarkRed, count);
+
+            DrawToCanvas(imgGS, sourceBitmap.GreenChannel, System.Windows.Media.Colors.LightGreen, count);
+            DrawToCanvas(imgGM, modifiedBitmap.GreenChannel, System.Windows.Media.Colors.DarkGreen, count);
+
+            DrawToCanvas(imgBS, sourceBitmap.BlueChannel, System.Windows.Media.Colors.LightBlue, count);
+            DrawToCanvas(imgBM, modifiedBitmap.BlueChannel, System.Windows.Media.Colors.DarkBlue, count);
+        }
+
+        private void DrawToCanvas(Canvas img, byte[] source,System.Windows.Media.Color color1, int count)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                var rectangle = new System.Windows.Shapes.Rectangle();
+                rectangle.Width = img.Width / count;
+                rectangle.Height = source[i] * img.Height / 255;
+                rectangle.Fill = new SolidColorBrush() { Color = color1, Opacity = 1 };
+                img.Children.Add(rectangle);
+                Canvas.SetBottom(rectangle, 0);
+                Canvas.SetLeft(rectangle, i * img.Width / count);
+            }
         }
 
         private void BtnSaveModified_Click(object sender, RoutedEventArgs e)
@@ -115,6 +142,32 @@ namespace DynamicLSB
             sourceBitmap.SaveBitmap(resultsFolder + "kaynak.bmp");
             modifiedBitmap.SaveBitmap(resultsFolder + "gizli.bmp");
             SaveLabels();
+            SaveHistograms();
+        }
+
+        private void SaveHistograms()
+        {
+            SaveCanvas(imgRS, "rs.png");
+            SaveCanvas(imgRM, "rm.png");
+            SaveCanvas(imgGS, "gs.png");
+            SaveCanvas(imgGM, "gm.png");
+            SaveCanvas(imgBS, "bs.png");
+            SaveCanvas(imgBM, "bm.png");
+        }
+
+        private void SaveCanvas(Canvas canvas,string fileName)
+        {
+            RenderTargetBitmap rtb = new RenderTargetBitmap((int)canvas.Width, (int)canvas.Height, 300d, 300d, System.Windows.Media.PixelFormats.Default);
+            rtb.Render(canvas);
+            var crop = new CroppedBitmap(rtb, new Int32Rect(0, 0, (int)canvas.Width, (int)canvas.Height));
+
+            BitmapEncoder pngEncoder = new PngBitmapEncoder();
+            pngEncoder.Frames.Add(BitmapFrame.Create(crop));
+
+            using (var fs = System.IO.File.OpenWrite(resultsFolder+fileName))
+            {
+                pngEncoder.Save(fs);
+            }
         }
 
         private void TbInput_TextChanged(object sender, TextChangedEventArgs e)
