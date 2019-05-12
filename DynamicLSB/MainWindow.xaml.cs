@@ -107,32 +107,36 @@ namespace DynamicLSB
                 channel = (Channel)(cmbChannel.SelectedIndex - 1);
             modifiedBitmap = new StegoBitmap(Stego.Hide(sourceBitmap, tbInput.Text, channel));
             imgModified.Source = GetSource(modifiedBitmap.GetImage());
-            DrawHistogram(sourceBitmap, modifiedBitmap,tbInput.Text.Length*8+200);
+            DrawHistogram(sourceBitmap, modifiedBitmap);
         }
 
-        private void DrawHistogram(StegoBitmap sourceBitmap, StegoBitmap modifiedBitmap,int count)
+        private void DrawHistogram(StegoBitmap sourceBitmap, StegoBitmap modifiedBitmap)
         {
-            DrawToCanvas(imgRS, sourceBitmap.RedChannel, System.Windows.Media.Colors.PaleVioletRed, count);
-            DrawToCanvas(imgRM, modifiedBitmap.RedChannel, System.Windows.Media.Colors.DarkRed, count);
+            DrawToCanvas(imgRS, sourceBitmap.RedChannel, System.Windows.Media.Colors.PaleVioletRed);
+            DrawToCanvas(imgRM, modifiedBitmap.RedChannel, System.Windows.Media.Colors.DarkRed);
 
-            DrawToCanvas(imgGS, sourceBitmap.GreenChannel, System.Windows.Media.Colors.LightGreen, count);
-            DrawToCanvas(imgGM, modifiedBitmap.GreenChannel, System.Windows.Media.Colors.DarkGreen, count);
+            DrawToCanvas(imgGS, sourceBitmap.GreenChannel, System.Windows.Media.Colors.LightGreen);
+            DrawToCanvas(imgGM, modifiedBitmap.GreenChannel, System.Windows.Media.Colors.DarkGreen);
 
-            DrawToCanvas(imgBS, sourceBitmap.BlueChannel, System.Windows.Media.Colors.LightBlue, count);
-            DrawToCanvas(imgBM, modifiedBitmap.BlueChannel, System.Windows.Media.Colors.DarkBlue, count);
+            DrawToCanvas(imgBS, sourceBitmap.BlueChannel, System.Windows.Media.Colors.LightBlue);
+            DrawToCanvas(imgBM, modifiedBitmap.BlueChannel, System.Windows.Media.Colors.DarkBlue);
         }
 
-        private void DrawToCanvas(Canvas img, byte[] source,System.Windows.Media.Color color1, int count)
+        private void DrawToCanvas(Canvas img, byte[] source,System.Windows.Media.Color color1)
         {
-            for (int i = 0; i < count; i++)
+            int[] hist = new int[256];
+            for (int i = 0; i < source.Length; i++)
+                hist[source[i]]++;
+            int max = hist.Max();
+            for (int i = 0; i < 256; i++)
             {
                 var rectangle = new System.Windows.Shapes.Rectangle();
-                rectangle.Width = img.Width / count;
-                rectangle.Height = source[i] * img.Height / 255;
+                rectangle.Width = img.Width / 256;
+                rectangle.Height = hist[i] * img.Height / (max+10);
                 rectangle.Fill = new SolidColorBrush() { Color = color1, Opacity = 1 };
                 img.Children.Add(rectangle);
                 Canvas.SetBottom(rectangle, 0);
-                Canvas.SetLeft(rectangle, i * img.Width / count);
+                Canvas.SetLeft(rectangle, i * img.Width / 256);
             }
         }
 
@@ -157,9 +161,9 @@ namespace DynamicLSB
 
         private void SaveCanvas(Canvas canvas,string fileName)
         {
-            RenderTargetBitmap rtb = new RenderTargetBitmap((int)canvas.Width, (int)canvas.Height, 300d, 300d, System.Windows.Media.PixelFormats.Default);
+            RenderTargetBitmap rtb = new RenderTargetBitmap((int)1100, (int)600, 600, 600, System.Windows.Media.PixelFormats.Default);
             rtb.Render(canvas);
-            var crop = new CroppedBitmap(rtb, new Int32Rect(0, 0, (int)canvas.Width, (int)canvas.Height));
+            var crop = new CroppedBitmap(rtb, new Int32Rect(0, 0, (int)1100, (int)600));
 
             BitmapEncoder pngEncoder = new PngBitmapEncoder();
             pngEncoder.Frames.Add(BitmapFrame.Create(crop));
